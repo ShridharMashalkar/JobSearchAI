@@ -149,7 +149,7 @@ python server.py
 
 Open the link mentioned in the command terminal after the server starts.
 Visualize the dashboard, along with capabilities of Database Update and Refresh buttons.
-It currently has mock data. To show real data once you start applying delete the tracking/jobs.xlsx file. The code will automatically create new file and keep appeding new data.
+It currently has mock data. To show real data once you start applying delete the tracking/jobs.xlsx file. The code will automatically create new file and keep appending new data.
 
 
 ### 4. Additional Features
@@ -198,4 +198,4 @@ These configurations control the LLM prompts and the sections included in your g
 - **`send_raw_jd`**: Sends the raw job description to the second (resume) and third (cover letter) LLM calls.
 - **`include_projects`**: Enables or disables the inclusion of projects in the generated resume.
 - **`include_certifications`**: Enables or disables the inclusion of certifications in the generated resume.
-- **`include_publications`**: Enables or disables the inclusion of publications in the generated resume.
+- **`include_publications`**: Enables or disables the inclusion of publications in the generated resume.

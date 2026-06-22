@@ -31,7 +31,7 @@ elif args.target == "linkedin":
         "--term", "AI OR Data Science OR Machine Learning",
         "--location", "Germany",
         "--job-type", "fulltime",
-        "--results", "5",
+        "--results", "50",
         "--distance", "50",
         "--offset", "10",
         "--linkedin-fetch-description",

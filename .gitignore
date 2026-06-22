@@ -1,0 +1,13 @@
+*.pyc
+__pycache__/
+venv/
+resume_tailor.egg-info/
+output/
+.pytest_cache/
+*.xlsx
+*.env
+.env.*
+.env
+misc/
+jobs/
+rejected_resumes/

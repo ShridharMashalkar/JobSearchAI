@@ -1,0 +1,3853 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerTrack AI - Job Application Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f1117;
+            --card-bg: #1a1d27;
+            --card-border: #2d3142;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent: #6c63ff;
+            --accent-glow: rgba(108, 99, 255, 0.15);
+            --accent-teal: #06b6d4;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-green: #22c55e;
+            --accent-blue: #3b82f6;
+            --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            line-height: 1.5;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Container & Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Header Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--accent), var(--accent-teal));
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #fff 40%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .source-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.loading {
+            background-color: var(--accent-orange);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.success {
+            background-color: var(--accent-green);
+        }
+
+        .status-dot.error {
+            background-color: var(--accent-red);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.9);
+                opacity: 0.5;
+            }
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-input {
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .filter-input::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .filter-input::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        /* Custom Status Multi-Select */
+        .multiselect-container {
+            position: relative;
+        }
+
+        .multiselect-trigger {
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: 105%;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            display: none;
+        }
+
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .multiselect-option:hover {
+            background-color: var(--bg-color);
+        }
+
+        .multiselect-option input {
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        /* Filter Fit Slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent);
+            min-width: 25px;
+        }
+
+        .btn-reset {
+            background-color: transparent;
+            border: 1px dashed var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .btn-reset:hover {
+            background-color: var(--accent-glow);
+            border-style: solid;
+        }
+
+        .active-filter-summary {
+            grid-column: 1 / -1;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--card-border);
+            padding-top: 0.75rem;
+            margin-top: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 0.35rem;
+            gap: 0.25rem;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            background-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
+        }
+
+        /* Main View Slots */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Overview KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .kpi-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .kpi-accent-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-teal));
+        }
+
+        /* Dashboard Card & Grid */
+        .chart-grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 380px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Companies Grid & Cards */
+        .company-insights-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            border-left: 4px solid var(--accent);
+            padding-left: 0.75rem;
+        }
+
+        .company-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .company-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .company-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .comp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .comp-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: #fff;
+        }
+
+        .comp-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding-bottom: 0.5rem;
+        }
+
+        .comp-stat-label {
+            color: var(--text-muted);
+        }
+
+        .comp-stat-val {
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            display: inline-block;
+        }
+
+        .badge-green {
+            background-color: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+
+        .badge-blue {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        .badge-indigo {
+            background-color: rgba(108, 99, 255, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(108, 99, 255, 0.25);
+        }
+
+        .badge-yellow {
+            background-color: rgba(234, 179, 11, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(234, 179, 11, 0.25);
+        }
+
+        .badge-red {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .badge-grey {
+            background-color: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+            border: 1px solid rgba(107, 114, 128, 0.25);
+        }
+
+        /* All Applications Table Tab */
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 1rem;
+            border-radius: 12px;
+            gap: 1.5rem;
+        }
+
+        .search-table-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .table-search-input {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.65rem 2.5rem 0.65rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .table-search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .table-search-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .table-wrapper {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow-x: auto;
+            max-height: 600px;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #202431;
+        }
+
+        th {
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--card-border);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        th .sort-icon {
+            margin-left: 0.25rem;
+            display: inline-block;
+            font-size: 0.75rem;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.015);
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.035);
+        }
+
+        /* Inline Fit Score Bar */
+        .fit-score-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .fit-score-text {
+            font-weight: 700;
+            width: 20px;
+        }
+
+        .fit-score-bar-bg {
+            background-color: var(--bg-color);
+            width: 80px;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .fit-score-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .fill-red {
+            background-color: var(--accent-red);
+        }
+
+        .fill-yellow {
+            background-color: var(--accent-orange);
+        }
+
+        .fill-green {
+            background-color: var(--accent-green);
+        }
+
+        .btn-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background-color: rgba(108, 99, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Central Loading Spinner */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 0;
+            gap: 1.5rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--card-border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Error States & File Upload Fallback */
+        .error-container {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: var(--accent-red);
+        }
+
+        .error-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .error-desc {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--card-border);
+            padding: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+        }
+
+        .upload-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+
+        .no-data-msg {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Individual Job Styling */
+        .job-facecard {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .job-facecard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .job-meta-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .job-meta-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+
+        .job-card-company {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .job-card-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+        }
+
+        .job-card-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .job-card-section {
+            background-color: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .job-card-section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent-teal);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .job-card-value {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Calendar Tab Styles */
+        .calendar-wrapper {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem 2rem 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .calendar-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .calendar-select-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .calendar-select-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .calendar-select {
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--accent-teal);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .calendar-cell {
+            background-color: rgba(255, 255, 255, 0.012);
+            border: 1px solid rgba(255, 255, 255, 0.025);
+            border-radius: 12px;
+            min-height: 120px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-cell:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .calendar-cell.other-month {
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .calendar-cell.today {
+            border-color: var(--accent);
+            background-color: rgba(108, 99, 255, 0.04);
+            box-shadow: 0 0 10px rgba(108, 99, 255, 0.1);
+        }
+
+        .calendar-day-num {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .calendar-cell.today .calendar-day-num {
+            color: var(--accent);
+        }
+
+        .calendar-cell:not(.other-month) .calendar-day-num {
+            color: var(--text-main);
+        }
+
+        /* Heatmap levels for calendar cells with applications */
+        .calendar-cell.has-apps-1 {
+            background-color: rgba(108, 99, 255, 0.04);
+            border-color: rgba(108, 99, 255, 0.2);
+        }
+
+        .calendar-cell.has-apps-2 {
+            background-color: rgba(6, 182, 212, 0.07);
+            border-color: rgba(6, 182, 212, 0.35);
+        }
+
+        .calendar-cell.has-apps-many {
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(108, 99, 255, 0.12);
+        }
+
+        /* Central count visualization */
+        .calendar-app-center-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            padding-bottom: 0.75rem;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .app-count-number {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 40%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .has-apps-1 .app-count-number {
+            background: linear-gradient(135deg, #a78bfa, #6c63ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .has-apps-2 .app-count-number {
+            background: linear-gradient(135deg, #22d3ee, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .has-apps-many .app-count-number {
+            background: linear-gradient(135deg, #fb7185, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+        }
+
+        .app-count-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        .has-apps-1 .app-count-label {
+            color: rgba(167, 139, 250, 0.85);
+        }
+
+        .has-apps-2 .app-count-label {
+            color: rgba(34, 211, 238, 0.85);
+        }
+
+        .has-apps-many .app-count-label {
+            color: rgba(251, 113, 133, 0.85);
+        }
+
+        /* Heatmap Matrix Styles */
+        .matrix-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .matrix-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .matrix-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.015em;
+        }
+
+        .matrix-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .matrix-table-wrapper {
+            overflow-x: auto;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px;
+            text-align: center;
+            min-width: 750px;
+            table-layout: fixed;
+        }
+
+        .matrix-th {
+            padding: 0.75rem 0.5rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: none !important;
+            cursor: default !important;
+        }
+
+        .matrix-th:hover {
+            background-color: transparent !important;
+        }
+
+        .matrix-row-label {
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: right;
+            padding-right: 1.5rem;
+            font-size: 0.9rem;
+            width: 90px;
+            white-space: nowrap;
+            cursor: default;
+        }
+
+        .matrix-cell {
+            border-radius: 8px;
+            height: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.01) !important;
+            background-color: rgba(255, 255, 255, 0.005);
+            user-select: none;
+            padding: 0 !important;
+        }
+
+        .matrix-cell.has-data {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .matrix-cell:hover {
+            transform: scale(1.06);
+            z-index: 2;
+            filter: brightness(1.2);
+        }
+
+        .matrix-legend {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            justify-content: flex-end;
+        }
+
+        .legend-bar {
+            height: 8px;
+            width: 120px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, rgba(108, 99, 255, 0.1), rgba(108, 99, 255, 0.9));
+        }
+
+        /* Tooltip style */
+        .matrix-tooltip {
+            position: absolute;
+            background-color: #1a1d27;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            display: none;
+            line-height: 1.4;
+            backdrop-filter: blur(8px);
+            border-left: 3px solid var(--accent);
+        }
+
+        .matrix-tooltip-title {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-title">
+                <div class="logo-icon">💼</div>
+                <div>
+                    <h1>CareerTrack AI</h1>
+                    <p style="font-size: 0.8rem; color: var(--text-muted)">Job Application Tracker & Analytics</p>
+                </div>
+            </div>
+            <div class="source-status">
+                <span id="status-dot" class="status-dot loading"></span>
+                <span id="status-text">Fetching jobs.xlsx...</span>
+            </div>
+        </header>
+
+        <!-- Global Filter Panel -->
+        <section class="filter-panel" id="filter-panel" style="display: none;">
+            <div class="filter-group">
+                <span class="filter-label">Search Jobs</span>
+                <input type="text" id="filter-search" class="filter-input" placeholder="Search Company or Title...">
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Application Status</span>
+                <div class="multiselect-container">
+                    <div class="multiselect-trigger" id="status-select-trigger">
+                        <span id="status-select-label">All Statuses</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="multiselect-dropdown" id="status-select-dropdown">
+                        <!-- Options dynamic -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">Min Fit Score</span>
+                <div class="slider-container">
+                    <input type="range" id="filter-fit" class="filter-input" min="1" max="10" value="1"
+                        style="flex: 1;">
+                    <span class="slider-value" id="fit-val-label">1</span>
+                </div>
+            </div>
+
+            <div class="filter-group" style="grid-column: span 2;">
+                <span class="filter-label">Date Range</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="date" id="filter-date-start" class="filter-input" style="padding: 0.65rem 0.5rem;">
+                    <input type="date" id="filter-date-end" class="filter-input" style="padding: 0.65rem 0.5rem;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; width: 100%; grid-column: span 2;">
+                <button class="btn-reset" id="btn-reset-filters" style="flex: 1; white-space: nowrap;">Reset
+                    Filters</button>
+                <button class="btn-reset" id="btn-refresh-data"
+                    style="flex: 1; border-color: var(--accent-teal); color: var(--accent-teal); white-space: nowrap;">🔄
+                    Refresh Data</button>
+            </div>
+
+            <div class="active-filter-summary">
+                <span id="filter-count-summary">Showing 0 of 0 applications</span>
+                <span style="color: var(--accent); font-weight: 500;">Filters update all tabs instantly</span>
+            </div>
+        </section>
+
+        <!-- Tab Buttons -->
+        <nav class="tab-navigation" id="tab-navigation" style="display: none;">
+            <button class="tab-btn active" data-tab="tab-overview">📊 Overview</button>
+            <button class="tab-btn" data-tab="tab-timeline">📅 Timeline</button>
+            <button class="tab-btn" data-tab="tab-companies">🏢 Companies</button>
+            <button class="tab-btn" data-tab="tab-skills">🎯 Skills Analysis</button>
+            <button class="tab-btn" data-tab="tab-matrix">🧮 Matrix</button>
+            <button class="tab-btn" data-tab="tab-calendar">📅 Calendar</button>
+            <button class="tab-btn" data-tab="tab-applications">📋 All Applications</button>
+            <button class="tab-btn" data-tab="tab-individual" id="tab-btn-individual">📄 Individual Job</button>
+        </nav>
+
+        <!-- Content Screen slots -->
+        <main>
+            <!-- Loader Screen -->
+            <div id="loader-screen" class="loader-container">
+                <div class="spinner"></div>
+                <p style="font-weight: 500; color: var(--text-muted)">Connecting to Excel data source...</p>
+            </div>
+
+            <!-- Error Screen -->
+            <div id="error-screen" class="error-container" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">Unable to Auto-Load jobs.xlsx</div>
+                <p class="error-desc" id="error-message">
+                    Because of browser security policies (CORS), web pages opened directly from local folders (via
+                    `file://`) cannot fetch local Excel files automatically.
+                </p>
+                <div class="upload-area" onclick="document.getElementById('file-loader').click()">
+                    <div class="upload-icon">📥</div>
+                    <p style="font-weight: 600; font-size: 0.95rem;">Select or Drag & Drop jobs.xlsx</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Locate the jobs.xlsx
+                        file in the same folder and drop it here</p>
+                    <input type="file" id="file-loader" class="hidden-file-input" accept=".xlsx">
+                </div>
+            </div>
+
+            <!-- TAB 1: OVERVIEW -->
+            <div id="tab-overview" class="tab-content">
+                <!-- Top KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <span class="kpi-title">Total Applications</span>
+                        <span class="kpi-value" id="kpi-total">0</span>
+                        <div class="kpi-accent-bar"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Active Applications</span>
+                        <span class="kpi-value" id="kpi-active">0</span>
+                        <div class="kpi-accent-bar" style="background: var(--accent-blue)"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Average Fit Score</span>
+                        <span class="kpi-value" id="kpi-avg-fit">0.0</span>
+                        <div class="kpi-accent-bar" style="background: var(--accent-green)"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Unique Companies</span>
+                        <span class="kpi-value" id="kpi-companies">0</span>
+                        <div class="kpi-accent-bar" style="background: var(--accent-orange)"></div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="chart-grid-2col" style="margin-bottom: 1.5rem;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Applications by Status</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-status"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Fit Score Distribution</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-fit-dist"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="chart-grid-2col">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Top 10 Most Required Technical Skills</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-top-skills"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Top 10 Missing Keywords</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-missing-keywords"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: TIMELINE -->
+            <div id="tab-timeline" class="tab-content">
+                <div class="chart-grid-2col" style="margin-bottom: 1.5rem;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Applications Per Day</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-timeline-daily"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Cumulative Applications Over Time</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-timeline-cumulative"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card" style="min-height: 420px;">
+                    <div class="card-header">
+                        <span class="card-title">Fit Score Over Time</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-fit-timeline"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: COMPANIES -->
+            <div id="tab-companies" class="tab-content">
+                <div class="chart-grid-2col" style="margin-bottom: 1.5rem;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Applications per Company</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-companies-apps"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Average Fit Score by Company (Companies with >1 App)</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-companies-avgfit"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="company-insights-title">Company Cards Section</h3>
+                <div class="company-cards-grid" id="company-cards-container">
+                    <!-- Dynamic cards -->
+                </div>
+            </div>
+
+            <!-- TAB 4: SKILLS ANALYSIS -->
+            <div id="tab-skills" class="tab-content">
+                <div class="chart-grid-2col" style="margin-bottom: 1.5rem;">
+                    <div class="dashboard-card" style="min-height: 480px;">
+                        <div class="card-header">
+                            <span class="card-title">Top Technical Skills (Radar View)</span>
+                        </div>
+                        <div class="chart-container flex-center"
+                            style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; width: 100%;">
+                            <div style="width: 100%; height: 400px; position: relative;">
+                                <canvas id="chart-skills-tech-radar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card" style="min-height: 480px;">
+                        <div class="card-header">
+                            <span class="card-title">Top Soft Skills (Radar View)</span>
+                        </div>
+                        <div class="chart-container flex-center"
+                            style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; width: 100%;">
+                            <div style="width: 100%; height: 400px; position: relative;">
+                                <canvas id="chart-skills-soft-radar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-grid-2col" style="margin-bottom: 1.5rem;">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Top 20 Technical Skills Frequency</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-skills-wordcloud"></canvas>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <span class="card-title">Skills Gap Analysis (Required vs. Missing)</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-skills-gap"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4.5: MATRIX -->
+            <div id="tab-matrix" class="tab-content">
+                <div class="matrix-container">
+                    <div class="matrix-header">
+                        <div>
+                            <span class="matrix-title">Application Status vs. Fit Score Matrix</span>
+                            <p class="matrix-subtitle">Visual heatmap of job count distribution by overall fit score and
+                                status</p>
+                        </div>
+                        <div class="matrix-legend">
+                            <span>Low Volume</span>
+                            <div class="legend-bar"></div>
+                            <span>High Volume</span>
+                        </div>
+                    </div>
+
+                    <div class="matrix-table-wrapper">
+                        <table class="matrix-table">
+                            <thead>
+                                <tr id="matrix-header-row">
+                                    <!-- Column headers dynamic -->
+                                </tr>
+                            </thead>
+                            <tbody id="matrix-body">
+                                <!-- Matrix rows dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: CALENDAR -->
+            <div id="tab-calendar" class="tab-content">
+                <div class="calendar-wrapper">
+                    <div class="calendar-header-row">
+                        <span class="calendar-title-text" id="calendar-title">Calendar View</span>
+                        <div class="calendar-controls">
+                            <div class="calendar-select-wrapper">
+                                <span class="calendar-select-label">Month</span>
+                                <select id="calendar-month-select" class="calendar-select">
+                                    <option value="0">January</option>
+                                    <option value="1">February</option>
+                                    <option value="2">March</option>
+                                    <option value="3">April</option>
+                                    <option value="4">May</option>
+                                    <option value="5">June</option>
+                                    <option value="6">July</option>
+                                    <option value="7">August</option>
+                                    <option value="8">September</option>
+                                    <option value="9">October</option>
+                                    <option value="10">November</option>
+                                    <option value="11">December</option>
+                                </select>
+                            </div>
+                            <div class="calendar-select-wrapper">
+                                <span class="calendar-select-label">Year</span>
+                                <select id="calendar-year-select" class="calendar-select">
+                                    <option value="2026">2026</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2020">2020</option>
+                                </select>
+                            </div>
+                            <div class="calendar-select-wrapper" style="margin-left: 0.5rem; border-left: 1px solid var(--card-border); padding-left: 1rem;" title="Include 'CustomDocsGenerated' records in the count along with standard application statuses.">
+                                <input type="checkbox" id="calendar-include-custom-docs" style="accent-color: var(--accent); cursor: pointer; width: 1.1rem; height: 1.1rem;" checked>
+                                <label for="calendar-include-custom-docs" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none;">Include Custom Docs</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendar-grid-container">
+                        <!-- Day Headers -->
+                        <div class="calendar-day-header">Sun</div>
+                        <div class="calendar-day-header">Mon</div>
+                        <div class="calendar-day-header">Tue</div>
+                        <div class="calendar-day-header">Wed</div>
+                        <div class="calendar-day-header">Thu</div>
+                        <div class="calendar-day-header">Fri</div>
+                        <div class="calendar-day-header">Sat</div>
+
+                        <!-- Calendar cells will be injected here dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: ALL APPLICATIONS -->
+            <div id="tab-applications" class="tab-content">
+                <div class="table-wrapper">
+                    <table id="applications-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('company')">Company <span class="sort-icon"
+                                        id="sort-company">⇅</span></th>
+                                <th onclick="sortTable('title')">Title <span class="sort-icon" id="sort-title">⇅</span>
+                                </th>
+                                <th onclick="sortTable('date')">Date <span class="sort-icon" id="sort-date">⇅</span>
+                                </th>
+                                <th onclick="sortTable('fit')">Fit Score <span class="sort-icon" id="sort-fit">⇅</span>
+                                </th>
+                                <th onclick="sortTable('status')">Status <span class="sort-icon"
+                                        id="sort-status">⇅</span></th>
+                                <th style="cursor: default;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 7: INDIVIDUAL JOB -->
+            <div id="tab-individual" class="tab-content">
+                <div id="individual-job-container">
+                    <div class="no-data-msg">
+                        <h3>📄 No Job Selected</h3>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Click on any application row in the
+                            <strong>All Applications</strong> tab to view detailed insights.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer"
+            style="text-align: center; padding: 1.5rem 0; margin-top: 2rem; border-top: 1px solid var(--card-border); font-size: 0.85rem; color: var(--text-muted);">
+            <p>CareerTrack AI Dashboard &bull; Created by <a href="https://github.com/ShridharMashalkar" target="_blank"
+                    style="color: var(--accent); text-decoration: none; font-weight: 600;">Shridhar Mashalkar</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATA LOAD & STATE VARIABLES
+        // ==========================================
+        let dataset = []; // Raw parsed data rows
+        let filteredData = []; // Filtered rows based on current settings
+        let activeTabId = 'tab-overview';
+
+        // Track active chart instances to prevent canvas re-use errors
+        let activeCharts = {};
+        let isFirstLoad = true;
+
+        // Heatmap Visualization Theme Configuration
+        // Set this variable to choose the visual theme:
+        // - 'gradient' for a dynamic Green-Yellow-Red color scale (green = low count, yellow = medium, red = high)
+        // - Any hex color code (e.g. '#6c63ff' for purple, '#06b6d4' for teal) for a single-color theme
+        const heatmapTheme = 'gradient';
+
+        // Filter values
+        let filterQuery = '';
+        let filterFitMin = 1;
+        let filterStatuses = new Set();
+        let filterDateStart = null;
+        let filterDateEnd = null;
+
+        // Sorting state
+        let sortColumn = 'date';
+        let sortAscending = false; // default newest first
+
+        // Color definitions
+        const statusColors = {
+            'CustomDocsGenerated': { bg: 'badge-indigo', color: '#6c63ff' },
+            'Applied': { bg: 'badge-blue', color: '#3b82f6' },
+            'Interviewing': { bg: 'badge-yellow', color: '#eab308' },
+            'Offer': { bg: 'badge-green', color: '#22c55e' },
+            'Rejected': { bg: 'badge-red', color: '#ef4444' },
+            'Other': { bg: 'badge-grey', color: '#6b7280' }
+        };
+
+        // ==========================================
+        // 2. PARSING & UTILITIES
+        // ==========================================
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            if (dateStr instanceof Date) return dateStr;
+            if (typeof dateStr === 'number') {
+                // Excel serial date format
+                return new Date((dateStr - 25569) * 86400 * 1000);
+            }
+
+            // Manual split parsing for format DD-MM-YYYY
+            const parts = String(dateStr).trim().split('-');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // 0-indexed month
+                const year = parseInt(parts[2], 10);
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    return new Date(year, month, day);
+                }
+            }
+
+            const fallback = new Date(dateStr);
+            return isNaN(fallback.getTime()) ? null : fallback;
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function parseJsonArray(cellValue) {
+            if (!cellValue) return [];
+            if (Array.isArray(cellValue)) return cellValue;
+
+            try {
+                const parsed = JSON.parse(cellValue);
+                if (Array.isArray(parsed)) return parsed;
+                return [];
+            } catch (e) {
+                if (typeof cellValue === 'string') {
+                    return cellValue.split(',').map(s => s.trim()).filter(Boolean);
+                }
+                return [];
+            }
+        }
+
+        function getFieldValue(row, options) {
+            for (const opt of options) {
+                if (row[opt] !== undefined) return row[opt];
+            }
+            return null;
+        }
+
+        function getUniqueStatuses(rows) {
+            const statuses = new Set();
+            rows.forEach(r => {
+                if (r.status) statuses.add(r.status);
+            });
+            return Array.from(statuses).sort();
+        }
+
+        // ==========================================
+        // 3. CORE DATA PROCESSING
+        // ==========================================
+        function processExcelData(rawRows) {
+            dataset = rawRows.map((row, idx) => {
+                const company = getFieldValue(row, ["Company", "company_name"]) || 'Unknown';
+                const title = getFieldValue(row, ["Title", "job_title"]) || 'Untitled';
+
+                const rawFit = getFieldValue(row, ["Overall Fit", "overall_fit"]);
+                let fit = parseInt(rawFit, 10);
+                if (isNaN(fit) || fit < 1 || fit > 10) fit = null;
+
+                const date = parseDate(getFieldValue(row, ["Date", "processed_at"]));
+                const status = getFieldValue(row, ["Application Status", "status"]) || 'Other';
+                const url = getFieldValue(row, ["Job URL", "job_url"]) || '';
+                const summary = getFieldValue(row, ["Role Summary", "role_summary"]) || '';
+                const responsibilities = parseJsonArray(getFieldValue(row, ["Key Responsibilities", "key_responsibilities"]));
+                const techSkills = parseJsonArray(getFieldValue(row, ["Technical Skills", "tech_skills"]));
+                const softSkills = parseJsonArray(getFieldValue(row, ["Soft Skills", "soft_skills"]));
+                const missingKeywords = parseJsonArray(getFieldValue(row, ["Missing Keywords", "missing_keywords"]));
+                const folder = getFieldValue(row, ["Output Folder", "output_folder"]) || '';
+                const customNotes = getFieldValue(row, ["Custom Notes", "custom_notes"]) || '';
+
+                return {
+                    company, title, fit, date, status, url, summary,
+                    responsibilities, techSkills, softSkills, missingKeywords, folder,
+                    customNotes,
+                    excelIndex: idx + 2
+                };
+            });
+
+            // Initialize status filter list
+            const allStatuses = getUniqueStatuses(dataset);
+            buildStatusDropdown(allStatuses);
+
+            applyFilters();
+            initCalendarDefaultSelection();
+        }
+
+        // ==========================================
+        // 4. FILTERING LOGIC
+        // ==========================================
+        function applyFilters() {
+            filteredData = dataset.filter(row => {
+                // Search text filter
+                if (filterQuery) {
+                    const query = filterQuery.toLowerCase();
+                    const matchCompany = row.company.toLowerCase().includes(query);
+                    const matchTitle = row.title.toLowerCase().includes(query);
+                    if (!matchCompany && !matchTitle) return false;
+                }
+
+                // Fit Score filter
+                if (row.fit !== null && row.fit < filterFitMin) return false;
+
+                // Status Multi-Select filter
+                if (filterStatuses.size > 0 && !filterStatuses.has(row.status)) return false;
+
+                // Date Range filter
+                if (row.date) {
+                    if (filterDateStart && row.date < filterDateStart) return false;
+                    if (filterDateEnd && row.date > filterDateEnd) return false;
+                } else if (filterDateStart || filterDateEnd) {
+                    return false; // Skip if row date is missing but filters are set
+                }
+
+                return true;
+            });
+
+            updateFilterSummary();
+            renderActiveTab();
+        }
+
+        function updateFilterSummary() {
+            const total = dataset.length;
+            const current = filteredData.length;
+            document.getElementById('filter-count-summary').innerText = `Showing ${current} of ${total} applications`;
+        }
+
+        function buildStatusDropdown(statuses) {
+            const container = document.getElementById('status-select-dropdown');
+            container.innerHTML = '';
+
+            statuses.forEach(status => {
+                const option = document.createElement('div');
+                option.className = 'multiselect-option';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = status;
+                checkbox.id = `status-chk-${status}`;
+                if (filterStatuses.has(status)) {
+                    checkbox.checked = true;
+                }
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        filterStatuses.add(status);
+                    } else {
+                        filterStatuses.delete(status);
+                    }
+                    updateStatusTriggerLabel();
+                    applyFilters();
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = `status-chk-${status}`;
+                label.innerText = status;
+                label.style.cursor = 'pointer';
+                label.style.flex = '1';
+
+                option.appendChild(checkbox);
+                option.appendChild(label);
+                container.appendChild(option);
+            });
+
+            updateStatusTriggerLabel();
+        }
+
+        function updateStatusTriggerLabel() {
+            const label = document.getElementById('status-select-label');
+            if (filterStatuses.size === 0) {
+                label.innerText = 'All Statuses';
+            } else if (filterStatuses.size === 1) {
+                label.innerText = Array.from(filterStatuses)[0];
+            } else {
+                label.innerText = `${filterStatuses.size} Selected`;
+            }
+        }
+
+        // Toggle multi-select dropdown visibility
+        document.getElementById('status-select-trigger').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dd = document.getElementById('status-select-dropdown');
+            dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('status-select-dropdown').style.display = 'none';
+        });
+
+        document.getElementById('status-select-dropdown').addEventListener('click', (e) => {
+            e.stopPropagation(); // Avoid closing dropdown inside click
+        });
+
+        // Reset Filters button handler
+        document.getElementById('btn-reset-filters').addEventListener('click', () => {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-fit').value = 1;
+            document.getElementById('fit-val-label').innerText = '1';
+            document.getElementById('filter-date-start').value = '';
+            document.getElementById('filter-date-end').value = '';
+
+            filterQuery = '';
+            filterFitMin = 1;
+            filterDateStart = null;
+            filterDateEnd = null;
+            filterStatuses.clear();
+
+            // Uncheck all dropdown status checkboxes
+            document.querySelectorAll('.multiselect-option input').forEach(chk => {
+                chk.checked = false;
+            });
+
+            updateStatusTriggerLabel();
+            applyFilters();
+        });
+
+        // Text search input handler
+        document.getElementById('filter-search').addEventListener('input', (e) => {
+            filterQuery = e.target.value;
+            applyFilters();
+        });
+
+        // Fit score slider handler
+        document.getElementById('filter-fit').addEventListener('input', (e) => {
+            filterFitMin = parseInt(e.target.value, 10);
+            document.getElementById('fit-val-label').innerText = filterFitMin;
+            applyFilters();
+        });
+
+        // Date range picker handlers
+        document.getElementById('filter-date-start').addEventListener('change', (e) => {
+            filterDateStart = e.target.value ? new Date(e.target.value) : null;
+            if (filterDateStart) filterDateStart.setHours(0, 0, 0, 0);
+            applyFilters();
+        });
+
+        document.getElementById('filter-date-end').addEventListener('change', (e) => {
+            filterDateEnd = e.target.value ? new Date(e.target.value) : null;
+            if (filterDateEnd) filterDateEnd.setHours(23, 59, 59, 999);
+            applyFilters();
+        });
+
+
+        // ==========================================
+        // 5. CHART RENDER UTILITIES
+        // ==========================================
+        function getChartThemeOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#f3f4f6', font: { family: 'Inter', size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1d27',
+                        titleColor: '#fff',
+                        bodyColor: '#f3f4f6',
+                        borderColor: '#2d3142',
+                        borderWidth: 1,
+                        titleFont: { family: 'Inter', weight: 'bold' },
+                        bodyFont: { family: 'Inter' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#2d3142' },
+                        ticks: { color: '#9ca3af', font: { family: 'Inter' } }
+                    },
+                    y: {
+                        grid: { color: '#2d3142' },
+                        ticks: { color: '#9ca3af', font: { family: 'Inter' } }
+                    }
+                }
+            };
+        }
+
+        function createOrUpdateChart(chartId, config) {
+            if (activeCharts[chartId]) {
+                activeCharts[chartId].destroy();
+            }
+
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
+
+            // Ensure parent container height is populated
+            const ctx = canvas.getContext('2d');
+            activeCharts[chartId] = new Chart(ctx, config);
+        }
+
+        function getStatusBadgeClass(status) {
+            const cleaned = status ? status.trim() : 'Other';
+            if (statusColors[cleaned]) {
+                return statusColors[cleaned].bg;
+            }
+            return 'badge-grey';
+        }
+
+        function getStatusColor(status) {
+            const cleaned = status ? status.trim() : 'Other';
+            if (statusColors[cleaned]) {
+                return statusColors[cleaned].color;
+            }
+            return '#6b7280';
+        }
+
+
+        // ==========================================
+        // 6. TAB RENDERING
+        // ==========================================
+        function renderActiveTab() {
+            if (activeTabId === 'tab-calendar') {
+                clearNoDataMessage();
+                renderCalendarTab();
+                return;
+            }
+
+            if (filteredData.length === 0) {
+                // Render no data message if filtered out everything
+                showNoDataMessage();
+                return;
+            }
+            clearNoDataMessage();
+
+            switch (activeTabId) {
+                case 'tab-overview':
+                    renderOverviewTab();
+                    break;
+                case 'tab-timeline':
+                    renderTimelineTab();
+                    break;
+                case 'tab-companies':
+                    renderCompaniesTab();
+                    break;
+                case 'tab-skills':
+                    renderSkillsTab();
+                    break;
+                case 'tab-matrix':
+                    renderMatrixTab();
+                    break;
+                case 'tab-applications':
+                    renderApplicationsTab();
+                    break;
+            }
+        }
+
+        function showNoDataMessage() {
+            const tabs = ['tab-overview', 'tab-timeline', 'tab-companies', 'tab-skills', 'tab-matrix', 'tab-applications', 'tab-individual'];
+            tabs.forEach(tab => {
+                const container = document.getElementById(tab);
+                if (container.classList.contains('active')) {
+                    // Save original HTML structure if not already saved
+                    if (!container.dataset.originalHtml) {
+                        container.dataset.originalHtml = container.innerHTML;
+                    }
+                    container.innerHTML = `<div class="no-data-msg">
+                    <h3>🔍 No matching application rows</h3>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">Try relaxing your filter parameters in the top panel.</p>
+                </div>`;
+                }
+            });
+        }
+
+        function clearNoDataMessage() {
+            const tabs = ['tab-overview', 'tab-timeline', 'tab-companies', 'tab-skills', 'tab-matrix', 'tab-applications', 'tab-individual'];
+            tabs.forEach(tab => {
+                const container = document.getElementById(tab);
+                if (container.dataset.originalHtml) {
+                    container.innerHTML = container.dataset.originalHtml;
+                    delete container.dataset.originalHtml;
+                }
+            });
+        }
+
+        // ---------------------
+        // TAB 1: OVERVIEW TAB
+        // ---------------------
+        function renderOverviewTab() {
+            // 1. KPI Calculations
+            const totalCount = filteredData.length;
+            const activeCount = filteredData.filter(r => r.status !== 'Rejected' && r.status !== 'Withdrawn').length;
+
+            const validFits = filteredData.filter(r => r.fit !== null).map(r => r.fit);
+            const avgFit = validFits.length > 0 ? (validFits.reduce((a, b) => a + b, 0) / validFits.length).toFixed(1) : 'N/A';
+
+            const uniqueComps = new Set(filteredData.map(r => r.company)).size;
+
+            document.getElementById('kpi-total').innerText = totalCount;
+            document.getElementById('kpi-active').innerText = activeCount;
+            document.getElementById('kpi-avg-fit').innerText = avgFit;
+            document.getElementById('kpi-companies').innerText = uniqueComps;
+
+            // 2. Chart A: Status Doughnut
+            const statusMap = {};
+            filteredData.forEach(r => { statusMap[r.status] = (statusMap[r.status] || 0) + 1; });
+
+            const statusLabels = Object.keys(statusMap);
+            const statusValues = Object.values(statusMap);
+            const statusColorsList = statusLabels.map(s => getStatusColor(s));
+
+            createOrUpdateChart('chart-status', {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusValues,
+                        backgroundColor: statusColorsList,
+                        borderColor: '#1a1d27',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#f3f4f6', font: { family: 'Inter' } } }
+                    }
+                }
+            });
+
+            // 3. Chart B: Fit Score Distribution
+            const fitCounts = Array(10).fill(0);
+            filteredData.forEach(r => {
+                if (r.fit !== null) fitCounts[r.fit - 1]++;
+            });
+
+            // Gradient from Red to Green
+            const fitColors = fitCounts.map((_, index) => {
+                const score = index + 1;
+                if (score <= 4) return '#ef4444'; // Red
+                if (score <= 7) return '#f59e0b'; // Orange/Yellow
+                return '#22c55e'; // Green
+            });
+
+            createOrUpdateChart('chart-fit-dist', {
+                type: 'bar',
+                data: {
+                    labels: Array.from({ length: 10 }, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Applications',
+                        data: fitCounts,
+                        backgroundColor: fitColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, title: { display: true, text: 'Fit Score', color: '#9ca3af' } },
+                        y: { ...getChartThemeOptions().scales.y, beginAtZero: true, ticks: { stepSize: 1, color: '#9ca3af' } }
+                    }
+                }
+            });
+
+            // 4. Chart C & D Helper: Word count aggregation
+            function getTopItems(rows, field, limit = 10) {
+                const counts = {};
+                rows.forEach(r => {
+                    const items = r[field] || [];
+                    items.forEach(it => {
+                        const clean = it.trim();
+                        if (clean) counts[clean] = (counts[clean] || 0) + 1;
+                    });
+                });
+                return Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, limit);
+            }
+
+            // Top 10 Technical Skills
+            const topTech = getTopItems(filteredData, 'techSkills', 10);
+            createOrUpdateChart('chart-top-skills', {
+                type: 'bar',
+                data: {
+                    labels: topTech.map(x => x[0]),
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: topTech.map(x => x[1]),
+                        backgroundColor: '#6c63ff',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // Top 10 Missing Keywords
+            const topMissing = getTopItems(filteredData, 'missingKeywords', 10);
+            createOrUpdateChart('chart-missing-keywords', {
+                type: 'bar',
+                data: {
+                    labels: topMissing.map(x => x[0]),
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: topMissing.map(x => x[1]),
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        // ---------------------
+        // TAB 2: TIMELINE TAB
+        // ---------------------
+        function renderTimelineTab() {
+            if (filteredData.length === 0) return;
+
+            // Group by Date
+            const dateMap = {};
+            filteredData.forEach(r => {
+                if (r.date) {
+                    const dateKey = formatDate(r.date);
+                    dateMap[dateKey] = (dateMap[dateKey] || 0) + 1;
+                }
+            });
+
+            // Find min and max dates in filteredData
+            let minDate = null;
+            let maxDate = null;
+            filteredData.forEach(r => {
+                if (r.date) {
+                    if (!minDate || r.date < minDate) minDate = new Date(r.date);
+                    if (!maxDate || r.date > maxDate) maxDate = new Date(r.date);
+                }
+            });
+
+            if (!minDate) return;
+
+            // Start Date is filterDateStart (if selected) or minDate
+            let startDate = filterDateStart
+                ? new Date(filterDateStart.getFullYear(), filterDateStart.getMonth(), filterDateStart.getDate())
+                : new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+
+            // End Date is filterDateEnd (if selected) or max(today, maxDate)
+            const today = new Date();
+            const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+            let endDate = filterDateEnd
+                ? new Date(filterDateEnd.getFullYear(), filterDateEnd.getMonth(), filterDateEnd.getDate())
+                : (maxDate && maxDate > startOfToday ? new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()) : startOfToday);
+
+            // Keep bounds valid
+            if (startDate > endDate) {
+                startDate = new Date(endDate);
+            }
+
+            // Generate full date range with zero-filled counts for empty days
+            const sortedDates = [];
+            const dailyCounts = [];
+            let current = new Date(startDate);
+
+            while (current <= endDate) {
+                const dateKey = formatDate(current);
+                sortedDates.push(dateKey);
+                dailyCounts.push(dateMap[dateKey] || 0);
+
+                // Advance by 1 day
+                current.setDate(current.getDate() + 1);
+            }
+
+            // Running cumulative totals
+            let runningTotal = 0;
+            const cumulativeCounts = dailyCounts.map(count => {
+                runningTotal += count;
+                return runningTotal;
+            });
+
+            // Chart E: Daily applications
+            createOrUpdateChart('chart-timeline-daily', {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Daily Applications',
+                        data: dailyCounts,
+                        borderColor: '#6c63ff',
+                        backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    scales: {
+                        x: getChartThemeOptions().scales.x,
+                        y: { ...getChartThemeOptions().scales.y, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // Chart F: Cumulative applications
+            createOrUpdateChart('chart-timeline-cumulative', {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Cumulative Applications',
+                        data: cumulativeCounts,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    scales: {
+                        x: getChartThemeOptions().scales.x,
+                        y: { ...getChartThemeOptions().scales.y, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // Chart G: Fit Score Over Time (Line Graph)
+            const fitBuckets = { line1: {}, line2: {}, line3: {}, line4: {} };
+            filteredData.forEach(r => {
+                if (r.date && r.fit !== null) {
+                    const dateKey = formatDate(r.date);
+                    if (r.fit >= 1 && r.fit <= 4) {
+                        fitBuckets.line1[dateKey] = (fitBuckets.line1[dateKey] || 0) + 1;
+                    } else if (r.fit >= 5 && r.fit <= 6) {
+                        fitBuckets.line2[dateKey] = (fitBuckets.line2[dateKey] || 0) + 1;
+                    } else if (r.fit >= 7 && r.fit <= 8) {
+                        fitBuckets.line3[dateKey] = (fitBuckets.line3[dateKey] || 0) + 1;
+                    } else if (r.fit >= 9 && r.fit <= 10) {
+                        fitBuckets.line4[dateKey] = (fitBuckets.line4[dateKey] || 0) + 1;
+                    }
+                }
+            });
+
+            const line1Counts = [];
+            const line2Counts = [];
+            const line3Counts = [];
+            const line4Counts = [];
+
+            sortedDates.forEach(dateKey => {
+                line1Counts.push(fitBuckets.line1[dateKey] || 0);
+                line2Counts.push(fitBuckets.line2[dateKey] || 0);
+                line3Counts.push(fitBuckets.line3[dateKey] || 0);
+                line4Counts.push(fitBuckets.line4[dateKey] || 0);
+            });
+
+            createOrUpdateChart('chart-fit-timeline', {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [
+                        {
+                            label: 'Fit Score 1-4',
+                            data: line1Counts,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Fit Score 5-6',
+                            data: line2Counts,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Fit Score 7-8',
+                            data: line3Counts,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Fit Score 9-10',
+                            data: line4Counts,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    plugins: {
+                        legend: { display: true, labels: { color: '#f3f4f6', font: { family: 'Inter', size: 11 } } },
+                        tooltip: {
+                            ...getChartThemeOptions().plugins.tooltip,
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: getChartThemeOptions().scales.x,
+                        y: { 
+                            ...getChartThemeOptions().scales.y, 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 },
+                            title: { display: true, text: 'Number of Records', color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ---------------------
+        // TAB 3: COMPANIES TAB
+        // ---------------------
+        function renderCompaniesTab() {
+            const compCounts = {};
+            const compScores = {};
+
+            filteredData.forEach(r => {
+                compCounts[r.company] = (compCounts[r.company] || 0) + 1;
+                if (r.fit !== null) {
+                    if (!compScores[r.company]) compScores[r.company] = [];
+                    compScores[r.company].push(r.fit);
+                }
+            });
+
+            // 1. Chart H: Applications per company
+            const sortedComps = Object.entries(compCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 15); // Show top 15
+
+            createOrUpdateChart('chart-companies-apps', {
+                type: 'bar',
+                data: {
+                    labels: sortedComps.map(x => x[0]),
+                    datasets: [{
+                        label: 'Applications',
+                        data: sortedComps.map(x => x[1]),
+                        backgroundColor: '#6c63ff',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // 2. Chart I: Average Fit Score by Company (only showing companies with count > 1)
+            const avgScores = Object.entries(compScores)
+                .filter(([comp]) => compCounts[comp] > 1)
+                .map(([comp, scores]) => {
+                    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                    return [comp, parseFloat(avg.toFixed(1))];
+                })
+                .sort((a, b) => b[1] - a[1]);
+
+            const avgScoreColors = avgScores.map(x => {
+                const val = x[1];
+                if (val < 5.0) return '#ef4444';
+                if (val <= 7.0) return '#f59e0b';
+                return '#22c55e';
+            });
+
+            createOrUpdateChart('chart-companies-avgfit', {
+                type: 'bar',
+                data: {
+                    labels: avgScores.map(x => x[0]),
+                    datasets: [{
+                        label: 'Average Fit',
+                        data: avgScores.map(x => x[1]),
+                        backgroundColor: avgScoreColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, min: 0, max: 10, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // 3. Render Company Cards
+            const uniqueCompanies = Array.from(new Set(filteredData.map(r => r.company))).sort();
+            const cardsContainer = document.getElementById('company-cards-container');
+            cardsContainer.innerHTML = '';
+
+            uniqueCompanies.forEach(comp => {
+                // Find stats for this company
+                const compRows = filteredData.filter(r => r.company === comp);
+                const count = compRows.length;
+
+                const fits = compRows.filter(r => r.fit !== null).map(r => r.fit);
+                const bestFit = fits.length > 0 ? Math.max(...fits) : 'N/A';
+
+                // Get most recent status based on date
+                const sortedByDate = [...compRows].sort((a, b) => {
+                    if (!a.date) return 1;
+                    if (!b.date) return -1;
+                    return b.date - a.date;
+                });
+                const latestStatus = sortedByDate[0].status;
+
+                let badgeClass = 'badge-grey';
+                if (['Offer', 'Interviewing'].includes(latestStatus)) badgeClass = 'badge-green';
+                else if (['Applied', 'CustomDocsGenerated'].includes(latestStatus)) badgeClass = 'badge-blue';
+                else if (['Rejected'].includes(latestStatus)) badgeClass = 'badge-red';
+
+                const card = document.createElement('div');
+                card.className = 'company-card';
+                card.innerHTML = `
+                <div class="comp-header">
+                    <span class="comp-name">${comp}</span>
+                    <span class="status-badge ${badgeClass}">${latestStatus}</span>
+                </div>
+                <div class="comp-stat-row" style="margin-top: 0.5rem;">
+                    <span class="comp-stat-label">Applications</span>
+                    <span class="comp-stat-val">${count}</span>
+                </div>
+                <div class="comp-stat-row">
+                    <span class="comp-stat-label">Best Fit Score</span>
+                    <span class="comp-stat-val">${bestFit}/10</span>
+                </div>
+            `;
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // ---------------------
+        // TAB 4: SKILLS ANALYSIS TAB
+        // ---------------------
+        function renderSkillsTab() {
+            // Item counter helpers
+            function getItemCounts(rows, field) {
+                const counts = {};
+                rows.forEach(r => {
+                    const arr = r[field] || [];
+                    arr.forEach(it => {
+                        const clean = it.trim();
+                        if (clean) counts[clean] = (counts[clean] || 0) + 1;
+                    });
+                });
+                return counts;
+            }
+
+            const rawTechCounts = getItemCounts(filteredData, 'techSkills');
+            const rawMissingCounts = getItemCounts(filteredData, 'missingKeywords');
+            const rawSoftCounts = getItemCounts(filteredData, 'softSkills');
+
+            // Combined logic for clustering tech skills and missing keywords to keep them aligned
+            const combinedTechCounts = {};
+            for (const [k, v] of Object.entries(rawTechCounts)) {
+                combinedTechCounts[k] = (combinedTechCounts[k] || 0) + v;
+            }
+            for (const [k, v] of Object.entries(rawMissingCounts)) {
+                combinedTechCounts[k] = (combinedTechCounts[k] || 0) + v;
+            }
+
+            // Helper to check similarity
+            function isSimilar(s1, s2) {
+                const norm1 = s1.toLowerCase().trim().replace(/[^a-z0-9+#]/g, '');
+                const norm2 = s2.toLowerCase().trim().replace(/[^a-z0-9+#]/g, '');
+                if (norm1 === norm2) return true;
+
+                const w1 = s1.toLowerCase().trim().split(/\s+/).filter(w => w.length > 1);
+                const w2 = s2.toLowerCase().trim().split(/\s+/).filter(w => w.length > 1);
+                if (w1.length === 0 || w2.length === 0) return false;
+
+                if (w1.length === 1 && w2.includes(w1[0])) return true;
+                if (w2.length === 1 && w1.includes(w2[0])) return true;
+
+                const intersection = w1.filter(w => w2.includes(w)).length;
+                const unionSize = new Set([...w1, ...w2]).size;
+                if (intersection / unionSize >= 0.5) return true;
+
+                return false;
+            }
+
+            // Establish canonical mappings
+            const techCanonicalMap = {};
+            const sortedCombined = Object.entries(combinedTechCounts).sort((a, b) => b[1] - a[1]);
+            const techClusters = [];
+
+            for (const [skill] of sortedCombined) {
+                let matched = false;
+                for (const cluster of techClusters) {
+                    if (isSimilar(cluster.canonical, skill)) {
+                        cluster.members.push(skill);
+                        techCanonicalMap[skill] = cluster.canonical;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    techClusters.push({
+                        canonical: skill,
+                        members: [skill]
+                    });
+                    techCanonicalMap[skill] = skill;
+                }
+            }
+
+            const softCanonicalMap = {};
+            const sortedSoft = Object.entries(rawSoftCounts).sort((a, b) => b[1] - a[1]);
+            const softClusters = [];
+
+            for (const [skill] of sortedSoft) {
+                let matched = false;
+                for (const cluster of softClusters) {
+                    if (isSimilar(cluster.canonical, skill)) {
+                        cluster.members.push(skill);
+                        softCanonicalMap[skill] = cluster.canonical;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    softClusters.push({
+                        canonical: skill,
+                        members: [skill]
+                    });
+                    softCanonicalMap[skill] = skill;
+                }
+            }
+
+            // Aggregate counts by canonical keys
+            const techCounts = {};
+            for (const [skill, count] of Object.entries(rawTechCounts)) {
+                const canonical = techCanonicalMap[skill];
+                techCounts[canonical] = (techCounts[canonical] || 0) + count;
+            }
+
+            const missingCountsMap = {};
+            for (const [skill, count] of Object.entries(rawMissingCounts)) {
+                const canonical = techCanonicalMap[skill];
+                missingCountsMap[canonical] = (missingCountsMap[canonical] || 0) + count;
+            }
+
+            const softCounts = {};
+            for (const [skill, count] of Object.entries(rawSoftCounts)) {
+                const canonical = softCanonicalMap[skill];
+                softCounts[canonical] = (softCounts[canonical] || 0) + count;
+            }
+
+            // 1. Chart J: Wordcloud-style Bar (Top 20 Tech Skills)
+            const top20Tech = Object.entries(techCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20);
+
+            const rankColors = top20Tech.map((_, index) => {
+                const ratio = index / 20;
+                return `rgba(${Math.floor(108 * (1 - ratio) + 6 * ratio)}, ${Math.floor(99 * (1 - ratio) + 182 * ratio)}, ${Math.floor(255 * (1 - ratio) + 212 * ratio)}, 0.85)`;
+            });
+
+            createOrUpdateChart('chart-skills-wordcloud', {
+                type: 'bar',
+                data: {
+                    labels: top20Tech.map(x => x[0]),
+                    datasets: [{
+                        label: 'Required Frequency',
+                        data: top20Tech.map(x => x[1]),
+                        backgroundColor: rankColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ...getChartThemeOptions().scales.x, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            // 2. Chart K: Tech Skills Radar Chart (Top 10)
+            const top10Tech = Object.entries(techCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            createOrUpdateChart('chart-skills-tech-radar', {
+                type: 'radar',
+                data: {
+                    labels: top10Tech.map(x => x[0]),
+                    datasets: [{
+                        label: 'Technical Skills Demand',
+                        data: top10Tech.map(x => x[1]),
+                        backgroundColor: 'rgba(108, 99, 255, 0.25)',
+                        borderColor: '#6c63ff',
+                        pointBackgroundColor: '#6c63ff',
+                        pointHoverBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            min: 0,
+                            angleLines: { color: '#2d3142' },
+                            grid: { color: '#2d3142' },
+                            pointLabels: { color: '#9ca3af', font: { family: 'Inter', size: 10, weight: '600' } },
+                            ticks: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 3. Chart L: Soft Skills Radar Chart (Top 10)
+            const top10Soft = Object.entries(softCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            createOrUpdateChart('chart-skills-soft-radar', {
+                type: 'radar',
+                data: {
+                    labels: top10Soft.map(x => x[0]),
+                    datasets: [{
+                        label: 'Soft Skills Demand',
+                        data: top10Soft.map(x => x[1]),
+                        backgroundColor: 'rgba(6, 182, 212, 0.25)',
+                        borderColor: '#06b6d4',
+                        pointBackgroundColor: '#06b6d4',
+                        pointHoverBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            min: 0,
+                            angleLines: { color: '#2d3142' },
+                            grid: { color: '#2d3142' },
+                            pointLabels: { color: '#9ca3af', font: { family: 'Inter', size: 10, weight: '600' } },
+                            ticks: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 4. Chart M: Skills Gap Analysis (Grouped Bar Chart)
+            const top10TechList = top20Tech.slice(0, 10).map(x => x[0]);
+            const requiredData = top10TechList.map(skill => techCounts[skill] || 0);
+            const missingData = top10TechList.map(skill => missingCountsMap[skill] || 0);
+
+            createOrUpdateChart('chart-skills-gap', {
+                type: 'bar',
+                data: {
+                    labels: top10TechList,
+                    datasets: [
+                        {
+                            label: 'Required (Listed in Job Description)',
+                            data: requiredData,
+                            backgroundColor: '#6c63ff',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Missing (Flagged as Missing Keywords)',
+                            data: missingData,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    ...getChartThemeOptions(),
+                    scales: {
+                        x: getChartThemeOptions().scales.x,
+                        y: { ...getChartThemeOptions().scales.y, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        // ---------------------
+        // TAB 5: ALL APPLICATIONS TABLE TAB
+        // ---------------------
+        function renderApplicationsTab() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            // Sort data based on sort settings
+            const sorted = [...filteredData].sort((a, b) => {
+                let valA, valB;
+                switch (sortColumn) {
+                    case 'company':
+                        valA = a.company.toLowerCase();
+                        valB = b.company.toLowerCase();
+                        break;
+                    case 'title':
+                        valA = a.title.toLowerCase();
+                        valB = b.title.toLowerCase();
+                        break;
+                    case 'date':
+                        valA = a.date ? a.date.getTime() : 0;
+                        valB = b.date ? b.date.getTime() : 0;
+                        break;
+                    case 'fit':
+                        valA = a.fit !== null ? a.fit : -1;
+                        valB = b.fit !== null ? b.fit : -1;
+                        break;
+                    case 'status':
+                        valA = a.status.toLowerCase();
+                        valB = b.status.toLowerCase();
+                        break;
+                    default:
+                        valA = 0;
+                        valB = 0;
+                }
+
+                if (valA < valB) return sortAscending ? -1 : 1;
+                if (valA > valB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+
+            // Update sorting header icons
+            const columns = ['company', 'title', 'date', 'fit', 'status'];
+            columns.forEach(col => {
+                const icon = document.getElementById(`sort-${col}`);
+                if (sortColumn === col) {
+                    icon.innerText = sortAscending ? '▲' : '▼';
+                    icon.style.color = 'var(--accent)';
+                } else {
+                    icon.innerText = '⇅';
+                    icon.style.color = 'var(--text-muted)';
+                }
+            });
+
+            // Render rows
+            sorted.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-link')) return;
+                    showIndividualJob(row);
+                });
+
+                // Status badge class
+                const badgeClass = getStatusBadgeClass(row.status);
+
+                // Inline Fit Score bar colors
+                let fitClass = 'fill-grey';
+                if (row.fit !== null) {
+                    if (row.fit < 5) fitClass = 'fill-red';
+                    else if (row.fit <= 7) fitClass = 'fill-yellow';
+                    else fitClass = 'fill-green';
+                }
+
+                const fitScoreContent = row.fit !== null
+                    ? `<div class="fit-score-cell">
+                     <span class="fit-score-text">${row.fit}</span>
+                     <div class="fit-score-bar-bg">
+                         <div class="fit-score-bar-fill ${fitClass}" style="width: ${row.fit * 10}%"></div>
+                     </div>
+                   </div>`
+                    : `<span style="color: var(--text-muted)">N/A</span>`;
+
+                // Action link
+                const actionLink = row.url
+                    ? `<a href="${row.url}" target="_blank" class="btn-link" title="Open Job URL">🔗</a>`
+                    : `<span style="color: var(--text-muted); font-size: 0.85rem;">None</span>`;
+
+                const displayCompany = row.company.length > 25 ? row.company.substring(0, 25) + '...' : row.company;
+                const displayTitle = row.title.length > 25 ? row.title.substring(0, 25) + '...' : row.title;
+
+                tr.innerHTML = `
+                <td style="font-weight: 600; color: #fff;" title="${row.company}">${displayCompany}</td>
+                <td title="${row.title}">${displayTitle}</td>
+                <td>${row.date ? formatDate(row.date) : '<span style="color: var(--text-muted)">N/A</span>'}</td>
+                <td>${fitScoreContent}</td>
+                <td><span class="status-badge ${badgeClass}">${row.status}</span></td>
+                <td>${actionLink}</td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortAscending = !sortAscending;
+            } else {
+                sortColumn = column;
+                sortAscending = true;
+            }
+            renderApplicationsTab();
+        }
+
+        // ---------------------
+        // TAB 6: CALENDAR TAB
+        // ---------------------
+        function renderCalendarTab() {
+            const monthSelect = document.getElementById('calendar-month-select');
+            const yearSelect = document.getElementById('calendar-year-select');
+            const includeCustomDocsCheckbox = document.getElementById('calendar-include-custom-docs');
+
+            if (!monthSelect || !yearSelect) return;
+
+            const selectedMonth = parseInt(monthSelect.value, 10);
+            const selectedYear = parseInt(yearSelect.value, 10);
+            const includeCustomDocs = includeCustomDocsCheckbox ? includeCustomDocsCheckbox.checked : true;
+
+            // Update Title text
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            document.getElementById('calendar-title').innerText = `${monthNames[selectedMonth]} ${selectedYear} - Applications`;
+
+            // Find grid container
+            const gridContainer = document.getElementById('calendar-grid-container');
+            if (!gridContainer) return;
+
+            // Clear previous cell divs (keep the headers, which are first 7 child elements)
+            const cells = gridContainer.querySelectorAll('.calendar-cell');
+            cells.forEach(c => c.remove());
+
+            // Calculate days logic
+            // First day of selected month
+            const firstDayObj = new Date(selectedYear, selectedMonth, 1);
+            const startDayOfWeek = firstDayObj.getDay(); // 0 is Sunday, 6 is Saturday
+
+            // Days in selected month
+            const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+
+            // Days in previous month
+            const prevMonthIndex = selectedMonth === 0 ? 11 : selectedMonth - 1;
+            const prevMonthYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+            const daysInPrevMonth = new Date(prevMonthYear, prevMonthIndex + 1, 0).getDate();
+
+            // 1. Add trailing days from previous month
+            for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = daysInPrevMonth - i;
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell other-month';
+                cell.innerHTML = `<span class="calendar-day-num">${dayNum}</span>`;
+                gridContainer.appendChild(cell);
+            }
+
+            const today = new Date();
+            const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const isCurrentMonth = today.getFullYear() === selectedYear && today.getMonth() === selectedMonth;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell';
+                if (isCurrentMonth && today.getDate() === day) {
+                    cell.className += ' today';
+                }
+
+                // Find applications for this day in dataset (whole data)
+                const dayApps = dataset.filter(r => {
+                    if (!r.date) return false;
+                    if (!includeCustomDocs && r.status === 'CustomDocsGenerated') return false;
+                    const d = r.date;
+                    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth && d.getDate() === day;
+                });
+
+                let cellContent = `<span class="calendar-day-num">${day}</span>`;
+
+                if (dayApps.length > 0) {
+                    // Add heatmap classes based on volume
+                    let heatmapClass = 'has-apps-1';
+                    if (dayApps.length === 2) {
+                        heatmapClass = 'has-apps-2';
+                    } else if (dayApps.length >= 3) {
+                        heatmapClass = 'has-apps-many';
+                    }
+                    cell.className += ' ' + heatmapClass;
+
+                    // Centered count visualization
+                    const appText = dayApps.length === 1 ? 'Application' : 'Applications';
+                    cellContent += `
+                    <div class="calendar-app-center-indicator">
+                        <span class="app-count-number">${dayApps.length}</span>
+                        <span class="app-count-label">${appText}</span>
+                    </div>
+                `;
+                } else {
+                    const cellDate = new Date(selectedYear, selectedMonth, day);
+                    if (cellDate <= startOfToday) {
+                        cellContent += `
+                        <div class="calendar-app-center-indicator" style="opacity: 0.4;">
+                            <span class="app-count-number">0</span>
+                            <span class="app-count-label">Applications</span>
+                        </div>
+                    `;
+                    }
+                }
+
+                cell.innerHTML = cellContent;
+                gridContainer.appendChild(cell);
+            }
+
+            // 3. Add leading days from next month to pad the grid to complete the last row
+            const totalCellsSoFar = startDayOfWeek + daysInMonth;
+            const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
+
+            for (let day = 1; day <= remainingCells; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell other-month';
+                cell.innerHTML = `<span class="calendar-day-num">${day}</span>`;
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        // ---------------------
+        // TAB: MATRIX TAB (HEATMAP)
+        // ---------------------
+        function renderMatrixTab() {
+            const headerRow = document.getElementById('matrix-header-row');
+            const matrixBody = document.getElementById('matrix-body');
+            if (!headerRow || !matrixBody) return;
+
+            // Clear existing content
+            headerRow.innerHTML = '';
+            matrixBody.innerHTML = '';
+
+            // Update legend bar background color using theme color
+            const legendBar = document.querySelector('.legend-bar');
+            if (legendBar) {
+                if (heatmapTheme === 'gradient') {
+                    legendBar.style.background = 'linear-gradient(90deg, rgba(34, 197, 94, 0.25) 0%, rgba(234, 179, 11, 0.57) 50%, rgba(239, 68, 68, 0.9) 100%)';
+                } else {
+                    legendBar.style.background = `linear-gradient(90deg, ${hexToRgba(heatmapTheme, 0.15)}, ${hexToRgba(heatmapTheme, 1.0)})`;
+                }
+            }
+
+            // Get unique ordered statuses from the dataset
+            const order = ['CustomDocsGenerated', 'Applied', 'Interviewing', 'Offer', 'Rejected', 'Other'];
+            const unique = getUniqueStatuses(dataset);
+            const orderedStatuses = unique.sort((a, b) => {
+                let idxA = order.indexOf(a);
+                let idxB = order.indexOf(b);
+                if (idxA === -1) idxA = order.indexOf('Other') - 0.5;
+                if (idxB === -1) idxB = order.indexOf('Other') - 0.5;
+                if (idxA !== idxB) return idxA - idxB;
+                return a.localeCompare(b);
+            });
+
+            // 1. Build Header Row
+            // First cell is empty (above row labels)
+            const emptyTh = document.createElement('th');
+            emptyTh.className = 'matrix-th';
+            emptyTh.style.borderBottom = 'none';
+            headerRow.appendChild(emptyTh);
+
+            orderedStatuses.forEach(status => {
+                const th = document.createElement('th');
+                th.className = 'matrix-th';
+                th.innerText = status;
+                headerRow.appendChild(th);
+            });
+
+            // Define row labels: 10 down to 1, and N/A
+            const rows = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 'N/A'];
+
+            // Calculate counts and max count for color scaling
+            const counts = {};
+            let maxCount = 0;
+
+            rows.forEach(fit => {
+                orderedStatuses.forEach(status => {
+                    const count = filteredData.filter(row => {
+                        const rowFit = row.fit === null ? 'N/A' : row.fit;
+                        return rowFit === fit && row.status === status;
+                    }).length;
+                    counts[`${fit}_${status}`] = count;
+                    if (count > maxCount) {
+                        maxCount = count;
+                    }
+                });
+            });
+
+            const maxCountVal = maxCount > 0 ? maxCount : 1;
+
+            // 2. Build rows
+            rows.forEach(fit => {
+                const tr = document.createElement('tr');
+
+                // Row label
+                const labelTd = document.createElement('td');
+                labelTd.className = 'matrix-row-label';
+                labelTd.innerText = fit === 'N/A' ? 'N/A Fit' : `Fit ${fit}`;
+                tr.appendChild(labelTd);
+
+                // Row cells
+                orderedStatuses.forEach(status => {
+                    const td = document.createElement('td');
+                    const count = counts[`${fit}_${status}`];
+                    td.className = 'matrix-cell';
+
+                    if (count > 0) {
+                        td.classList.add('has-data');
+                        td.innerText = count;
+
+                        // Determine cell color and shadow color based on the selected theme
+                        let cellColor, hoverShadowColor;
+                        if (heatmapTheme === 'gradient') {
+                            cellColor = getHeatmapGradientColor(count, maxCountVal);
+                            hoverShadowColor = getHeatmapGradientColor(count, maxCountVal, 0.6);
+                        } else {
+                            const baseColor = heatmapTheme;
+                            const alpha = 0.15 + (count / maxCountVal) * 0.85;
+                            cellColor = hexToRgba(baseColor, alpha);
+                            hoverShadowColor = hexToRgba(baseColor, 0.6);
+                        }
+
+                        td.style.backgroundColor = cellColor;
+                        td.style.color = '#ffffff';
+                        td.style.fontWeight = '700';
+
+                        // Add hover shadow
+                        td.addEventListener('mouseenter', (e) => {
+                            td.style.boxShadow = `0 0 15px ${hoverShadowColor}`;
+                            showMatrixTooltip(e, fit, status, count, maxCountVal);
+                        });
+                        td.addEventListener('mousemove', moveMatrixTooltip);
+                        td.addEventListener('mouseleave', () => {
+                            td.style.boxShadow = '';
+                            hideMatrixTooltip();
+                        });
+                    } else {
+                        td.innerHTML = '<span style="opacity: 0.15; font-weight: normal; font-size: 0.8rem;">0</span>';
+                        td.style.backgroundColor = 'rgba(255, 255, 255, 0.01)';
+                        td.addEventListener('mouseenter', (e) => {
+                            showMatrixTooltip(e, fit, status, 0, maxCountVal);
+                        });
+                        td.addEventListener('mousemove', moveMatrixTooltip);
+                        td.addEventListener('mouseleave', hideMatrixTooltip);
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                matrixBody.appendChild(tr);
+            });
+        }
+
+        // Helper to convert hex to rgba
+        function hexToRgba(hex, alpha) {
+            let c = hex.substring(1);
+            if (c.length === 3) {
+                c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+            }
+            const num = parseInt(c, 16);
+            const r = (num >> 16) & 255;
+            const g = (num >> 8) & 255;
+            const b = num & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Helper to compute Green-Yellow-Red gradient color with high visual contrast
+        function getHeatmapGradientColor(count, maxCountVal, alphaOverride = null) {
+            if (count === 0) return 'rgba(255, 255, 255, 0.01)';
+
+            const ratio = count / maxCountVal;
+            let r, g, b;
+
+            if (ratio <= 0.5) {
+                const t = ratio * 2;
+                r = Math.round(34 + (234 - 34) * t);
+                g = Math.round(197 + (179 - 197) * t);
+                b = Math.round(94 + (11 - 94) * t);
+            } else {
+                const t = (ratio - 0.5) * 2;
+                // Interpolate yellow (234, 179, 11) to solid full red (255, 0, 0)
+                r = Math.round(234 + (255 - 234) * t);
+                g = Math.round(179 + (0 - 179) * t);
+                b = Math.round(11 + (0 - 11) * t);
+            }
+
+            // Dynamic opacity climbing to pure solid (1.0) at max values for maximum contrast
+            const alpha = alphaOverride !== null ? alphaOverride : (0.2 + ratio * 0.8);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Custom Tooltip Event Handlers
+        function showMatrixTooltip(e, fit, status, count, maxCountVal = 1) {
+            const tooltip = document.getElementById('matrix-tooltip');
+            if (!tooltip) return;
+
+            // Set left border indicator color to match the heatmap theme color or interpolated gradient color
+            if (heatmapTheme === 'gradient') {
+                tooltip.style.borderLeftColor = getHeatmapGradientColor(count, maxCountVal, 0.9);
+            } else {
+                tooltip.style.borderLeftColor = heatmapTheme;
+            }
+
+            const fitText = fit === 'N/A' ? 'No Fit Score' : `Fit Score: ${fit}/10`;
+            const countText = count === 1 ? '1 application' : `${count} applications`;
+
+            tooltip.innerHTML = `
+            <div class="matrix-tooltip-title">${status}</div>
+            <div style="font-weight: 500;">${fitText}</div>
+            <div style="color: var(--accent-teal); font-weight: 600; margin-top: 0.25rem;">${countText}</div>
+        `;
+            tooltip.style.display = 'block';
+            moveMatrixTooltip(e);
+        }
+
+        function moveMatrixTooltip(e) {
+            const tooltip = document.getElementById('matrix-tooltip');
+            if (!tooltip) return;
+
+            const tooltipWidth = tooltip.offsetWidth || 160;
+            const tooltipHeight = tooltip.offsetHeight || 80;
+
+            let x = e.pageX + 15;
+            let y = e.pageY + 15;
+
+            if (x + tooltipWidth > window.innerWidth + window.scrollX) {
+                x = e.pageX - tooltipWidth - 15;
+            }
+            if (y + tooltipHeight > window.innerHeight + window.scrollY) {
+                y = e.pageY - tooltipHeight - 15;
+            }
+
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+        }
+
+        function hideMatrixTooltip() {
+            const tooltip = document.getElementById('matrix-tooltip');
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function initCalendarDefaultSelection() {
+            if (!isFirstLoad) return;
+            // Find latest date in dataset
+            let latestDate = null;
+            dataset.forEach(row => {
+                if (row.date) {
+                    if (!latestDate || row.date > latestDate) {
+                        latestDate = row.date;
+                    }
+                }
+            });
+
+            const monthSelect = document.getElementById('calendar-month-select');
+            const yearSelect = document.getElementById('calendar-year-select');
+
+            if (!monthSelect || !yearSelect) return;
+
+            let targetMonth, targetYear;
+            if (latestDate) {
+                targetMonth = latestDate.getMonth();
+                targetYear = latestDate.getFullYear();
+            } else {
+                const today = new Date();
+                targetMonth = today.getMonth();
+                targetYear = today.getFullYear();
+            }
+
+            // Ensure the year is within the bounds (2020 to 2026)
+            if (targetYear >= 2020 && targetYear <= 2026) {
+                yearSelect.value = String(targetYear);
+            } else {
+                yearSelect.value = "2026"; // Fallback to 2026
+            }
+            monthSelect.value = String(targetMonth);
+            isFirstLoad = false;
+        }
+        function showIndividualJob(row) {
+            const container = document.getElementById('individual-job-container');
+
+            const badgeClass = getStatusBadgeClass(row.status);
+
+            // Convert arrays to comma separated strings
+            const techSkillsStr = row.techSkills.length > 0 ? row.techSkills.join(', ') : 'None';
+            const softSkillsStr = row.softSkills.length > 0 ? row.softSkills.join(', ') : 'None';
+            const missingKeywordsStr = row.missingKeywords.length > 0 ? row.missingKeywords.join(', ') : 'None';
+
+            const fitScoreBadgeColor = row.fit !== null
+                ? (row.fit < 5 ? 'var(--accent-red)' : row.fit <= 7 ? 'var(--accent-orange)' : 'var(--accent-green)')
+                : 'var(--text-muted)';
+
+            container.innerHTML = `
+            <div id="update-notification" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; display: none; text-align: center; font-weight: 600;"></div>
+            <div class="job-facecard">
+                <div class="job-facecard-header">
+                    <div class="job-meta-left">
+                        <span class="job-card-company">${row.company}</span>
+                        <span class="job-card-title">${row.title}</span>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem;">
+                            <span class="status-badge ${badgeClass}">${row.status}</span>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Applied on ${row.date ? formatDate(row.date) : 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="job-meta-right">
+                        <div style="text-align: right; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Overall Fit</span>
+                            <div style="font-size: 2.5rem; font-weight: 800; color: ${fitScoreBadgeColor}; line-height: 1.1;">
+                                ${row.fit !== null ? row.fit : 'N/A'}<span style="font-size: 1.25rem; font-weight: 500; color: var(--text-muted);">/10</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${row.url ? `<a href="${row.url}" target="_blank" class="btn-reset" style="border-style: solid; text-decoration: none; padding: 0.5rem 1.25rem; display: flex; align-items: center;">🔗 Open Job URL</a>` : ''}
+                            <button id="btn-edit-job" class="btn-reset" style="background-color: var(--accent); color: #fff; border-style: solid; padding: 0.5rem 1.25rem; font-weight: 600;">✏️ Edit Details</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="job-card-details-grid">
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Role Summary</span>
+                        <p class="job-card-value">${row.summary || '<span style="color: var(--text-muted); font-style: italic;">No summary provided.</span>'}</p>
+                    </div>
+                    
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Key Responsibilities</span>
+                        <p class="job-card-value">${row.responsibilities.length > 0 ? row.responsibilities.map(r => `• ${r}`).join('<br>') : '<span style="color: var(--text-muted)">None</span>'}</p>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Technical Skills</span>
+                        <p class="job-card-value" style="font-weight: 500;">${techSkillsStr}</p>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Soft Skills</span>
+                        <p class="job-card-value" style="font-weight: 500;">${softSkillsStr}</p>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Missing Keywords</span>
+                        <p class="job-card-value" style="font-weight: 500; color: var(--accent-orange);">${missingKeywordsStr}</p>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Tracking Metadata</span>
+                        <div class="job-card-value" style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem;">
+                            <div><strong style="color: var(--text-muted);">Output Folder:</strong> <span style="font-family: monospace; word-break: break-all;">${row.folder || 'N/A'}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Custom Notes (Scratch Pad)</span>
+                        <div class="job-card-value" style="font-family: inherit; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; background: rgba(255, 255, 255, 0.01); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 8px; padding: 1rem; min-height: 120px;">${row.customNotes || '<span style="color: var(--text-muted); font-style: italic;">No custom notes yet. Click Edit Details to add notes.</span>'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            document.getElementById('btn-edit-job').addEventListener('click', () => {
+                showEditJob(row);
+            });
+
+            // Switch to tab
+            const tabBtn = document.getElementById('tab-btn-individual');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            tabBtn.classList.add('active');
+
+            // Hide all tab panes
+            document.querySelectorAll('.tab-content').forEach(pane => pane.classList.remove('active'));
+
+            // Show target pane
+            const targetPane = document.getElementById('tab-individual');
+            if (targetPane) targetPane.classList.add('active');
+
+            activeTabId = 'tab-individual';
+        }
+
+        function showEditJob(row) {
+            const container = document.getElementById('individual-job-container');
+
+            // Convert arrays to comma separated strings
+            const techSkillsStr = row.techSkills.length > 0 ? row.techSkills.join(', ') : '';
+            const softSkillsStr = row.softSkills.length > 0 ? row.softSkills.join(', ') : '';
+            const missingKeywordsStr = row.missingKeywords.length > 0 ? row.missingKeywords.join(', ') : '';
+
+            // Prepare date string for date picker (YYYY-MM-DD)
+            let datePickerValue = "";
+            if (row.date) {
+                const y = row.date.getFullYear();
+                const m = String(row.date.getMonth() + 1).padStart(2, '0');
+                const d = String(row.date.getDate()).padStart(2, '0');
+                datePickerValue = `${y}-${m}-${d}`;
+            }
+
+            container.innerHTML = `
+            <div id="update-notification" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; display: none; text-align: center; font-weight: 600;"></div>
+            <div class="job-facecard">
+                <div class="job-facecard-header" style="flex-wrap: wrap; gap: 1rem;">
+                    <div class="job-meta-left" style="flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <label class="filter-label" style="margin-bottom: 0.25rem;">Company</label>
+                            <input type="text" id="edit-job-company" class="filter-input" value="${row.company || ''}" style="font-weight: 600;">
+                        </div>
+                        <div>
+                            <label class="filter-label" style="margin-bottom: 0.25rem;">Job Title</label>
+                            <input type="text" id="edit-job-title" class="filter-input" value="${row.title || ''}">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <div style="flex: 1;">
+                                <label class="filter-label" style="margin-bottom: 0.25rem;">Status</label>
+                                <select id="edit-job-status" class="filter-input">
+                                    <option value="CustomDocsGenerated" ${row.status === 'CustomDocsGenerated' ? 'selected' : ''}>CustomDocsGenerated</option>
+                                    <option value="Applied" ${row.status === 'Applied' ? 'selected' : ''}>Applied</option>
+                                    <option value="Interviewing" ${row.status === 'Interviewing' ? 'selected' : ''}>Interviewing</option>
+                                    <option value="Offer" ${row.status === 'Offer' ? 'selected' : ''}>Offer</option>
+                                    <option value="Rejected" ${row.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                                    <option value="Cancelled" ${row.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    <option value="Other" ${!['CustomDocsGenerated', 'Applied', 'Interviewing', 'Offer', 'Rejected', 'Cancelled'].includes(row.status) ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label class="filter-label" style="margin-bottom: 0.25rem;">Applied Date</label>
+                                <input type="date" id="edit-job-date" class="filter-input" value="${datePickerValue}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="job-meta-right" style="min-width: 200px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <label class="filter-label" style="margin-bottom: 0.25rem;">Overall Fit (1-10)</label>
+                            <input type="number" min="1" max="10" id="edit-job-fit" class="filter-input" value="${row.fit !== null ? row.fit : ''}" style="width: 80px; text-align: center; font-weight: bold; font-size: 1.2rem;">
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button id="btn-cancel-edit" class="btn-reset" style="border-style: dashed; padding: 0.5rem 1.25rem; font-weight: 600;">Cancel</button>
+                            <button id="btn-update-job" class="btn-reset" style="background-color: var(--accent); color: #fff; border-style: solid; padding: 0.5rem 1.25rem; font-weight: 700;">💾 Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="job-card-details-grid">
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Job URL</span>
+                        <input type="text" id="edit-job-url" class="filter-input" value="${row.url || ''}">
+                    </div>
+
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Role Summary</span>
+                        <textarea id="edit-job-summary" class="filter-input" style="min-height: 80px; font-family: inherit; resize: vertical;">${row.summary || ''}</textarea>
+                    </div>
+                    
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Key Responsibilities (one per line)</span>
+                        <textarea id="edit-job-responsibilities" class="filter-input" style="min-height: 100px; font-family: inherit; resize: vertical;">${row.responsibilities.join('\n')}</textarea>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Technical Skills (comma separated)</span>
+                        <textarea id="edit-job-techSkills" class="filter-input" style="min-height: 80px; font-family: inherit; resize: vertical;">${techSkillsStr}</textarea>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Soft Skills (comma separated)</span>
+                        <textarea id="edit-job-softSkills" class="filter-input" style="min-height: 80px; font-family: inherit; resize: vertical;">${softSkillsStr}</textarea>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Missing Keywords (comma separated)</span>
+                        <textarea id="edit-job-missingKeywords" class="filter-input" style="min-height: 80px; font-family: inherit; resize: vertical;">${missingKeywordsStr}</textarea>
+                    </div>
+
+                    <div class="job-card-section">
+                        <span class="job-card-section-title">Tracking Metadata</span>
+                        <div class="job-card-value" style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem;">
+                            <div><strong style="color: var(--text-muted);">Output Folder:</strong> <input type="text" id="edit-job-folder" class="filter-input" value="${row.folder || ''}" readonly style="background-color: transparent; border: none; padding: 0;"></div>
+                        </div>
+                    </div>
+
+                    <div class="job-card-section" style="grid-column: 1 / -1;">
+                        <span class="job-card-section-title">Custom Notes (Scratch Pad)</span>
+                        <textarea id="edit-job-customNotes" class="filter-input" style="min-height: 150px; font-family: inherit; resize: vertical;" placeholder="Write scratch pad items about interviews, e.g., first round done, follow-up scheduled...">${row.customNotes || ''}</textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            document.getElementById('btn-update-job').addEventListener('click', () => {
+                updateJobRow(row.excelIndex);
+            });
+
+            document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+                showIndividualJob(row);
+            });
+        }
+
+        async function updateJobRow(excelIndex) {
+            const company = document.getElementById('edit-job-company').value.trim();
+            const title = document.getElementById('edit-job-title').value.trim();
+            const status = document.getElementById('edit-job-status').value;
+
+            const dateInput = document.getElementById('edit-job-date').value;
+            const date = dateInput ? new Date(dateInput) : null;
+
+            const fitInput = document.getElementById('edit-job-fit').value;
+            const fit = fitInput !== "" ? parseInt(fitInput, 10) : null;
+
+            const url = document.getElementById('edit-job-url').value.trim();
+            const summary = document.getElementById('edit-job-summary').value.trim();
+
+            const responsibilities = document.getElementById('edit-job-responsibilities').value
+                .split('\n')
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const techSkills = document.getElementById('edit-job-techSkills').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const softSkills = document.getElementById('edit-job-softSkills').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const missingKeywords = document.getElementById('edit-job-missingKeywords').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+
+            const folder = document.getElementById('edit-job-folder').value.trim();
+            const customNotes = document.getElementById('edit-job-customNotes').value.trim();
+
+            const updatedData = {
+                excelIndex,
+                company,
+                title,
+                status,
+                date: dateInput,
+                fit,
+                url,
+                summary,
+                responsibilities,
+                techSkills,
+                softSkills,
+                missingKeywords,
+                folder,
+                customNotes
+            };
+
+            const editNotification = document.getElementById('update-notification');
+            if (editNotification) {
+                editNotification.style.display = 'block';
+                editNotification.style.backgroundColor = 'rgba(234, 179, 11, 0.15)';
+                editNotification.style.color = 'var(--accent-orange)';
+                editNotification.style.border = '1px solid rgba(234, 179, 11, 0.25)';
+                editNotification.innerText = 'Updating row in Excel...';
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                const result = await response.json();
+
+                // Helper function to update target row in arrays
+                const updateItemFields = (item) => {
+                    item.company = company;
+                    item.title = title;
+                    item.status = status;
+                    item.date = date;
+                    item.fit = fit;
+                    item.url = url;
+                    item.summary = summary;
+                    item.responsibilities = responsibilities;
+                    item.techSkills = techSkills;
+                    item.softSkills = softSkills;
+                    item.missingKeywords = missingKeywords;
+                    item.customNotes = customNotes;
+                };
+
+                if (result.success) {
+                    const localItem = dataset.find(r => r.excelIndex === excelIndex);
+                    if (localItem) updateItemFields(localItem);
+
+                    const filteredItem = filteredData.find(r => r.excelIndex === excelIndex);
+                    if (filteredItem) updateItemFields(filteredItem);
+
+                    // Switch back to beautiful view
+                    showIndividualJob(localItem || updatedData);
+
+                    // Show success message
+                    const notification = document.getElementById('update-notification');
+                    if (notification) {
+                        notification.style.display = 'block';
+                        notification.style.backgroundColor = 'rgba(34, 197, 94, 0.15)';
+                        notification.style.color = 'var(--accent-green)';
+                        notification.style.border = '1px solid rgba(34, 197, 94, 0.25)';
+                        notification.innerText = '💾 Excel file updated & saved successfully!';
+
+                        setTimeout(() => {
+                            notification.style.display = 'none';
+                        }, 4000);
+                    }
+
+                    // Refresh visual charts
+                    renderActiveTab();
+                } else {
+                    throw new Error(result.error || 'Server returned failure status');
+                }
+            } catch (err) {
+                console.error('Failed to update Excel:', err);
+
+                const localItem = dataset.find(r => r.excelIndex === excelIndex);
+                if (localItem) {
+                    localItem.company = company;
+                    localItem.title = title;
+                    localItem.status = status;
+                    localItem.date = date;
+                    localItem.fit = fit;
+                    localItem.url = url;
+                    localItem.summary = summary;
+                    localItem.responsibilities = responsibilities;
+                    localItem.techSkills = techSkills;
+                    localItem.softSkills = softSkills;
+                    localItem.missingKeywords = missingKeywords;
+                    localItem.customNotes = customNotes;
+                }
+
+                const filteredItem = filteredData.find(r => r.excelIndex === excelIndex);
+                if (filteredItem) {
+                    filteredItem.company = company;
+                    filteredItem.title = title;
+                    filteredItem.status = status;
+                    filteredItem.date = date;
+                    filteredItem.fit = fit;
+                    filteredItem.url = url;
+                    filteredItem.summary = summary;
+                    filteredItem.responsibilities = responsibilities;
+                    filteredItem.techSkills = techSkills;
+                    filteredItem.softSkills = softSkills;
+                    filteredItem.missingKeywords = missingKeywords;
+                    filteredItem.customNotes = customNotes;
+                }
+
+                // Switch back to beautiful view
+                showIndividualJob(localItem || updatedData);
+
+                const notification = document.getElementById('update-notification');
+                if (notification) {
+                    notification.style.display = 'block';
+                    notification.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                    notification.style.color = 'var(--accent-red)';
+                    notification.style.border = '1px solid rgba(239, 68, 68, 0.25)';
+                    notification.innerHTML = `⚠️ Update saved in-memory, but could not write to Excel file.<br>` +
+                        `<small>Ensure you started the server via 'python server.py' or check console for details: ${err.message}</small>`;
+                }
+
+                renderActiveTab();
+            }
+        }
+        // ==========================================
+        // 7. TAB LOGIC & NAVIGATION
+        // ==========================================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetTabId = btn.dataset.tab;
+
+                // Update active states in nav
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Hide all tab panes
+                document.querySelectorAll('.tab-content').forEach(pane => pane.classList.remove('active'));
+
+                // Show target pane
+                const targetPane = document.getElementById(targetTabId);
+                if (targetPane) targetPane.classList.add('active');
+
+                activeTabId = targetTabId;
+                renderActiveTab();
+            });
+        });
+
+
+        // ==========================================
+        // 8. DATA LOADING METHODS
+        // ==========================================
+
+        // Fallback file input change handler
+        document.getElementById('file-loader').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showLoaderScreen();
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    parseExcelBuffer(data, "Uploaded File");
+                } catch (err) {
+                    showErrorScreen("File Parsing Failed: " + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Auto-fetch jobs.xlsx on page load
+        async function autoFetchExcel() {
+            try {
+                const response = await fetch('./jobs.xlsx?t=' + Date.now(), { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP Error Status: ${response.status}`);
+                }
+                const buffer = await response.arrayBuffer();
+                parseExcelBuffer(buffer, "./jobs.xlsx");
+            } catch (err) {
+                console.warn("Auto-fetch failed. Showing manual upload fallback...", err);
+                // Display upload fallback
+                showErrorScreen(
+                    `Could not auto-load jobs.xlsx automatically from folders.<br>` +
+                    `<small style="color: var(--text-muted)">Reason: ${err.message}</small>`
+                );
+            }
+        }
+
+        function parseExcelBuffer(buffer, sourceName) {
+            try {
+                const data = new Uint8Array(buffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const rawRows = XLSX.utils.sheet_to_json(worksheet);
+
+                if (!rawRows || rawRows.length === 0) {
+                    throw new Error("The Excel worksheet contains no data rows.");
+                }
+
+                processExcelData(rawRows);
+                showDashboardScreens(sourceName);
+            } catch (err) {
+                showErrorScreen("Excel Parsing Error: " + err.message);
+            }
+        }
+
+        // UI State switch helpers
+        function showLoaderScreen() {
+            document.getElementById('loader-screen').style.display = 'flex';
+            document.getElementById('error-screen').style.display = 'none';
+            document.getElementById('filter-panel').style.display = 'none';
+            document.getElementById('tab-navigation').style.display = 'none';
+            document.querySelectorAll('.tab-content').forEach(pane => pane.style.display = 'none');
+        }
+
+        function showErrorScreen(errMsg) {
+            document.getElementById('loader-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'block';
+            document.getElementById('error-message').innerHTML = errMsg;
+
+            // Update header status
+            const dot = document.getElementById('status-dot');
+            dot.className = 'status-dot error';
+            document.getElementById('status-text').innerText = "Loading failed";
+        }
+
+        function showDashboardScreens(sourceName) {
+            document.getElementById('loader-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'none';
+
+            // Make dashboard filters and tab navigation visible
+            document.getElementById('filter-panel').style.display = 'grid';
+            document.getElementById('tab-navigation').style.display = 'flex';
+            document.querySelectorAll('.tab-content').forEach(pane => {
+                // Restore default inline display override
+                pane.style.display = '';
+            });
+
+            // Update header status
+            const dot = document.getElementById('status-dot');
+            dot.className = 'status-dot success';
+            document.getElementById('status-text').innerText = `Connected: ${sourceName}`;
+
+            renderActiveTab();
+        }
+
+        // Trigger auto fetch and calendar event listener setup on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            autoFetchExcel();
+
+            const monthSelect = document.getElementById('calendar-month-select');
+            const yearSelect = document.getElementById('calendar-year-select');
+            const includeCustomDocsCheckbox = document.getElementById('calendar-include-custom-docs');
+            if (monthSelect && yearSelect) {
+                monthSelect.addEventListener('change', renderCalendarTab);
+                yearSelect.addEventListener('change', renderCalendarTab);
+            }
+            if (includeCustomDocsCheckbox) {
+                includeCustomDocsCheckbox.addEventListener('change', renderCalendarTab);
+            }
+
+            document.getElementById('btn-refresh-data').addEventListener('click', () => {
+                showLoaderScreen();
+                const fileInput = document.getElementById('file-loader');
+                if (fileInput.files.length > 0) {
+                    // If the user manually uploaded a file, the File object might be stale.
+                    // Reset the input and ask them to select it again.
+                    fileInput.value = '';
+                    showErrorScreen("Please re-select the jobs.xlsx file to refresh data (browser security prevents auto-refreshing local files).");
+                } else {
+                    autoFetchExcel();
+                }
+            });
+        });
+
+    </script>
+    <div id="matrix-tooltip" class="matrix-tooltip"></div>
+</body>
+
+</html>

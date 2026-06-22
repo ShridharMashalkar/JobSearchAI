@@ -1,0 +1,67 @@
+paths:
+  jd_input_folder: jobs/input
+  output_folder: output
+  error_folder: jobs/error_jd
+  work_root: .work
+  resume_yaml_path: data/resume.yaml
+  resume_template_path: templateCV.tex
+  cover_letter_template_path: templateCoverLetter.tex
+  jobs_excel_path: tracking/jobs.xlsx
+
+filenames:
+  analysis_filename: AI_Analysis.txt
+  jd_filename: jd.txt
+  resume_tex_filename: John_Doe_CV.tex
+  cover_letter_tex_filename: John_Doe_CoverLetter.tex
+  resume_pdf_filename: John_Doe_CV.pdf
+  cover_letter_pdf_filename: John_Doe_CoverLetter.pdf
+  error_jd_suffix: _failed
+
+llm:
+  model_name: gpt-5.4-mini
+  temperature: 0.2
+  max_retries: 3
+  retry_start: 0
+  request_timeout_seconds: 120
+
+pdf:
+  command: pdflatex
+  runs: 2
+  timeout_seconds: 180
+  extra_args:
+    - -interaction=nonstopmode
+    - -halt-on-error
+    - -file-line-error
+
+excel:
+  sheet_name: Jobs
+  columns:
+    - Company
+    - Title
+    - Overall Fit
+    - Date
+    - Application Status
+    - Job URL
+    - Role Summary
+    - Key Responsibilities
+    - Technical Skills
+    - Soft Skills
+    - Missing Keywords
+    - Output Folder
+    - Custom Notes
+
+pipeline:
+  jd_glob: "*.txt"
+  job_folder_separator: "_"
+  folder_slug_max_length: 120
+  preserve_case: false
+  source_encoding: utf-8
+
+data:
+  send_missing_keywords: false
+  send_current_resume: false
+  send_raw_jd: false 
+  include_projects: true
+  include_certifications: true
+  include_publications: true
+

@@ -1,0 +1,106 @@
+\documentclass[10pt]{developercv}
+
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+    pdfcreator={CareerTrack AI - Developed by Shridhar Mashalkar (https://github.com/ShridharMashalkar/jobSearch/)},
+    pdfproducer={CareerTrack AI Pipeline v0.1.0}
+}
+
+\begin{document}
+
+\begin{multicols}{2}
+
+\begin{minipage}[t]{0.45\textwidth}
+
+\colorbox{black}{{\huge\textcolor{white}{\textbf{\MakeUppercase{NAMEINSERTHERE}}}}}
+
+\vspace{0.2cm}
+{\large \textbf{ROLEINSERTHERE}}
+
+\vspace{0.2cm}
+SUMMARYINSERTHERE
+\end{minipage}
+\vfill\null
+\columnbreak
+
+\begin{minipage}[t]{0.55\textwidth}
+
+\hspace{1.5cm}\cvsect{PERSONAL DETAILS}
+
+\hspace{0.5cm}\begin{tabular}{@{}ll}
+\textbf{Address:} & \hspace{0.1cm} LOCATIONINSERTHERE\\
+\textbf{Phone:} & \hspace{0.1cm} PHONEINSERTHERE\\
+\textbf{E-Mail:} & \hspace{0.1cm} \href{mailto:EMAILURLINSERTHERE}{EMAILTEXTINSERTHERE}\\
+\textbf{LinkedIn:} & \hspace{0.1cm} \href{LINKEDINURLINSERTHERE}{LINKEDINTEXTINSERTHERE}\\
+\end{tabular}
+
+\end{minipage}
+
+\end{multicols}
+
+\cvsect{PROFESSIONAL EXPERIENCE}
+\begin{entrylist}
+%BEGIN_EXPERIENCE%
+  \entry
+  {EXPERIENCEDATERANGEINSERTHERE\\\footnotesize{EXPERIENCELOCATIONINSERTHERE}}
+  {EXPERIENCETITLEINSERTHERE}
+  {EXPERIENCECOMPANYINSERTHERE}
+  {
+  \begin{itemize}[leftmargin=*]
+    EXPERIENCEBULLETSINSERTHERE
+  \end{itemize}
+  }
+%END_EXPERIENCE%
+\end{entrylist}
+
+\cvsect{EDUCATION}
+\begin{entrylist}
+%BEGIN_EDUCATION%
+  \entry
+  {EDUCATIONDATERANGEINSERTHERE}
+  {EDUCATIONDEGREEINSERTHERE}
+  {EDUCATIONINSTITUTIONINSERTHERE}
+  {EDUCATIONDETAILSINSERTHERE EDUCATIONFOCUSINSERTHERE}
+%END_EDUCATION%
+\end{entrylist}
+
+\vspace{0.5cm}
+\cvsect{SKILLS}
+
+\textbf{Technical Skills:} TECHNICALSKILLSINSERTHERE
+
+\textbf{Tech Stack:} TECHSTACKINSERTHERE
+
+\textbf{Soft Skills:} SOFTSKILLSINSERTHERE
+
+%BEGIN_PROJECTS%
+\cvsect{PROJECTS}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{PROJECT1NAMEINSERTHERE:} PROJECT1DESCRIPTIONINSERTHERE
+    \item \textbf{PROJECT2NAMEINSERTHERE:} PROJECT2DESCRIPTIONINSERTHERE
+\end{itemize}
+%END_PROJECTS%
+
+%BEGIN_CERTIFICATIONS%
+\cvsect{CERTIFICATIONS}
+
+CERTIFICATIONSINSERTHERE
+%END_CERTIFICATIONS%
+
+%BEGIN_PUBLICATIONS%
+\cvsect{PUBLICATIONS}
+
+PUBLICATIONSINSERTHERE
+%END_PUBLICATIONS%
+
+\cvsect{MISCELLANEOUS}
+
+\textbf{Languages:} LANGUAGESINSERTHERE\\[0.05cm]
+
+\textbf{Hobbies:} HOBBIESINSERTHERE
+
+\end{document}

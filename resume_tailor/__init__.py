@@ -1,0 +1,1 @@
+"""Resume tailoring automation pipeline."""

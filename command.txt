@@ -1,0 +1,9 @@
+### Run resume tailor
+uv run resume-tailor --config config/pipeline_config.yaml
+
+### Create the text file for jobs input if you want to add your job descriptions manually
+1..30 | ForEach-Object { New-Item -Path "file_$_.txt" -ItemType File }
+
+### Run job search for linkedin automated
+uv run python run_scrape.py --target linkedin
+uv run python run_scrape.py --target apify

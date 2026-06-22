@@ -1,0 +1,134 @@
+name: John Doe
+location: Austin, Texas, USA
+phone: +1 512 555 7812
+email: john.doe.analytics@gmail.com
+linkedin_url: https://www.linkedin.com/in/johndoeanalytics
+linkedin_text: linkedin.com/in/johndoeanalytics
+headline: Business Intelligence Analyst
+summary: Results-driven Business Intelligence professional with 4+ years of experience in retail and healthcare sectors. Proven expertise in Python, SQL, Tableau, data analysis, ETL, A/B testing, and machine learning. Currently pursuing a Master's in Business Analytics and authorized to work in the United States.
+totalExperienceInYears: 4+   
+# Values for totalExperienceInYears can be in the format 2 or 3.5 or 4+ or 5.5+
+
+skills:
+  technical:
+    - Data Analysis
+    - Data Visualization
+    - Pandas
+    - NumPy
+    - Scikit-learn
+    - Matplotlib
+    - Data Mining
+    - Predictive Analytics
+    - Machine Learning
+    - Data Modeling
+    - ETL (Extract, Transform, Load)
+    - Database Management
+    - A/B Testing
+    - Statistical Analysis
+    - Regression
+    - Classification
+    - Data Migration
+    - Data Governance
+    - Funnel Analysis
+  tech_stack:
+    - Python
+    - SQL
+    - Microsoft Excel
+    - Bitbucket
+    - Salesforce
+    - Power BI
+    - Tableau
+    - GitHub
+    - Microsoft Office
+    - PyTorch
+    - Jira
+  soft:
+    - Problem Solving
+    - Critical Thinking
+    - Attention to Detail
+    - Communication Skills
+    - Presentation Skills
+    - Time Management
+    - Cross-Functional Collaboration
+    - Storytelling
+    - Stakeholder Meetings
+    - Conflict Resolution
+
+education:
+  - date_range: 09/2022 -- Present
+    degree: Master of Science (Business Analytics)
+    institution: University of Texas at Dallas
+    details: "Graduate Merit Scholarship Recipient, GPA: 3.8/4.0"
+    focus: "Analytics, machine learning, data engineering"
+  - date_range: 08/2017 -- 05/2021
+    degree: Bachelor of Science (Computer Engineering)
+    institution: Arizona State University
+    details: "GPA: 3.7/4.0"
+    focus: "Software engineering, databases, statistics"
+
+experience:
+  - date_range: 05/2024 -- Present
+    location: Austin, Texas, USA
+    title: Business Intelligence Analyst
+    company: Horizon Technologies Inc.
+    bullets:
+      - Designed enterprise reporting solutions using Power BI and SQL.
+      - Built automated ETL pipelines for operational reporting.
+      - Developed KPI dashboards for executive stakeholders.
+    TotalBulletPointsToInclude: 3
+  - date_range: 08/2023 -- 04/2024
+    location: Dallas, Texas, USA
+    title: Graduate Data Analyst
+    company: Northbridge Research Institute
+    bullets:
+      - Conducted predictive analytics research using Python.
+      - Delivered machine learning workshops for graduate students.
+    TotalBulletPointsToInclude: 2
+  - date_range: 06/2021 -- 07/2023
+    location: Chicago, Illinois, USA
+    title: Data Analyst
+    company: Sterling Consulting Group
+    bullets:
+      - Automated customer analytics workflows.
+      - Developed Tableau dashboards for business users.
+      - Performed statistical analysis and A/B testing.
+    TotalBulletPointsToInclude: 3
+  - date_range: 01/2021 -- 05/2021
+    location: Phoenix, Arizona, USA
+    title: Data Engineering Intern
+    company: BluePeak Analytics
+    bullets:
+      - Built data ingestion pipelines.
+      - Developed web scraping solutions using Python.
+    TotalBulletPointsToInclude: 1
+
+# If no projects are available, do not remove the "projects" key.
+# Instead, explicitly set:
+# projects: []
+projects:
+  - name: Customer Churn Prediction Platform
+    description: Built a machine learning platform to identify customer churn risk using predictive analytics and interactive dashboards.
+
+  - name: E-Commerce Competitive Intelligence Dashboard
+    description: Developed a web scraping and reporting solution for monitoring competitor pricing and market trends.
+
+# If no certifications are available, do not remove the "certifications" key.
+# Instead, explicitly set:
+# certifications: []
+certifications:
+  - Google Advanced Data Analytics Certificate
+  - Microsoft Power BI Data Analyst Associate
+  - AWS Certified Data Analytics Specialty
+
+# If no publications are available, do not remove the "publications" key.
+# Instead, explicitly set:
+# publications: []
+publications:
+  - Enterprise Analytics Frameworks for Business Decision Making
+
+languages:
+  - Fluent English
+  - Conversational German
+
+hobbies:
+  - I love to host trivia nights. I also enjoy hiking, playing chess, and soccer.

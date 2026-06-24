@@ -144,7 +144,7 @@ For every processed job, a dedicated folder (e.g., `output/companyname_jobtitle/
 - To visualize your entire job search progress in a premium dashboard, run the command mentioned below:
 
 ```
-python server.py
+uv run python server.py
 ```
 
 Open the link mentioned in the command terminal after the server starts.
